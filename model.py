@@ -1,10 +1,65 @@
 # -*- coding: utf-8 -*-
 
-## serial port setting
+from PyQt5 import QtCore, QtGui, QtWidgets
+import sys, view
+
 from os import system, name
 import serial
 import serial.tools.list_ports
 
+from os.path import join
+from datetime import datetime, timedelta
+import tkinter as tk
+from tkinter.filedialog import askdirectory
+import serial
+import numpy as np
+import pandas as pd
+
+import matplotlib
+matplotlib.use("Qt5Agg")
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.canvas = FigureCanvas(self.sinWave)
+        self.graphicscene = QtWidgets.QGraphicScene()
+        self.graphicscene = setSceneRect(QtCore.QRect(860, 0, 261, 661))
+        self.graphicscene.addWidget(self.canvas)
+        self.t = 0
+
+    def sinWave(self, i=0):
+        fig = plt.figure(figsize=(3,2), dpi=100)
+        ax = plt.axes(xlim=(0, 2), ylim=(-2, 2))
+        line, = ax.plot([], [])
+        line.set_data([], [])
+        x = np.linspace(0, 2, 100)
+        y = np.sin(5 * np.pi * (x - 0.01*i))
+        line.set_data(x, y)
+        plt.close()
+        return fig
+
+    def count(self):
+        self.t = self.t + 5
+        self.canvas = FigureCanvas(self.sinWave(self.t))
+        self.graphicscene.clear()
+        self.graphicscene.addWidget(self.canvas)
+
+if __name__ == '__main__':
+        app = QtWidgets.QApplication(sys.argv)
+        window = MainWindow()
+        window.show()
+
+        timer = QtCore.QTimer()
+        timer.timeout.connect(window.count)
+        timer.start(50)
+
+        sys.exit(app.exec_())
+
+## serial port setting
 # clear the screen
 def clear():
     # for windows
@@ -30,13 +85,7 @@ def connect_port(com_port, baud_rate, time_out):
 
 
 ## recording setting
-from os.path import join
-from datetime import datetime, timedelta
-import tkinter as tk
-from tkinter.filedialog import askdirectory
-import serial
-import numpy as np
-import pandas as pd
+
 
 # ask the directory to save the data
 def ask_directory():
@@ -133,11 +182,8 @@ def reset():
 
 
 ## plotting setting
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg, NavigationToolbar2Tk)
-from matplotlib.figure import Figure
-
 # make a Figure object
+'''
 def makeFigure():
     fig = Figure(figsize=(6, 2.5), dpi=100, tight_layout=True)
     ax = fig.add_subplot(111)
@@ -150,3 +196,6 @@ def makeFigure():
     line, = ax.plot([], [])
 
     return fig, ax, line
+'''
+
+    
