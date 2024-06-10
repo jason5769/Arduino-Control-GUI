@@ -3,15 +3,13 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys, view
 
-from os import system, name
+import os
+from os.path import join
+
 import serial
 import serial.tools.list_ports
 
-from os.path import join
 from datetime import datetime, timedelta
-#import tkinter as tk
-#from tkinter.filedialog import askdirectory
-import serial
 import numpy as np
 import pandas as pd
 
@@ -23,16 +21,46 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
     def __init__(self):
         super().__init__()
+        # ui variables
         self.setupUi(self)
+        
         self.canvas = FigureCanvas(self.waveForm())
         self.graphicscene = QtWidgets.QGraphicsScene()
         #self.graphicscene.setSceneRect(0.0, 0.0, 851.0, 411.0)
         self.graphicscene.addWidget(self.canvas)
         self.graphicsView.setScene(self.graphicscene)
-
-        #parameters for function test
+        
+        self.COMPortList = {}
+        self.comboBox.addItems(self.listPort())
+        
         self.t = 0  # time step for sin wave
     
+    ## Serial Port Setting
+    def clearConsole(self):
+        # for windows
+        if os.name == 'nt':
+            _ = os.system('cls')
+        # for mac and linux
+        else:
+            _ = os.system('clear')
+
+    # return list of available COM port
+    def listPort(self):
+        ports = map(str, serial.tools.list_ports.comports())
+        if ports:
+            for p in ports:
+                #print(p)
+                self.COMPortList[p.split(' - ')[0]] = p
+            return self.COMPortList.keys()
+        else:
+            return [""]
+
+    # connet port
+    def connectPort(self, com_port, baud_rate, time_out):
+        port_name = com_port.split(" ")[0]
+        ser = serial.Serial(port_name, baud_rate, timeout=time_out)   # set the serial connection
+        return ser
+
     ## Plot Setting
     # initial figure
     def waveForm(self):
@@ -90,29 +118,11 @@ if __name__ == '__main__':
 
         sys.exit(app.exec_())
 '''
-## serial port setting
+
 # clear the screen
-def clear():
-    # for windows
-    if name == 'nt':
-        _ = system('cls')
-    # for mac and linux
-    else:
-        _ = system('clear')
 
-# return list of available COM port
-def list_port():
-    ports = serial.tools.list_ports.comports()
-    if ports:
-        return ports
-    else:
-        return ['']
 
-# connet port
-def connect_port(com_port, baud_rate, time_out):
-    port_name = com_port.split(" ")[0]
-    ser = serial.Serial(port_name, baud_rate, timeout=time_out)   # set the serial connection
-    return ser
+
 
 
 ## recording setting
