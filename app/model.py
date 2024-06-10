@@ -29,11 +29,18 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
         self.graphicscene.setSceneRect(0.0, 0.0, self.sceneSize[0], self.sceneSize[1])
         self.graphicscene.addWidget(self.canvas)
         self.graphicsView.setScene(self.graphicscene)
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.count)
+        self.timer.start(50)
         #print(self.getViewSize(str(self.graphicsView.size())))
 
         self.COMPortList = {}
         self.comboBox.addItems(self.listPort())
-        
+        self.COMPort = 0
+        self.connectButton.clicked.connect(self.connectButtonClick)
+        self.timer2 = QtCore.QTimer()
+        self.timer2.timeout.connect(self.get_data)
+
         self.t = 0  # time step for sin wave
         
         #self.Timer(self.test_count)
@@ -73,6 +80,30 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
         ser = serial.Serial(port_name, baud_rate, timeout=time_out)   # set the serial connection
         return ser
 
+    # action of Connect Button
+    def connectButtonClick(self):
+        try:
+            self.COMPort = self.connectPort(self.comboBox.currentText(), int(self.baudrateTextBrowser.toPlainText()), int(self.timeoutTextBrowser.toPlainText()))
+            print(self.COMPort)
+        except:
+            self.COMPort = 0
+            print("No available COM port device!")
+        self.timer2.start(1000 / int(self.samplingrateTextBrowser.toPlainText()))
+
+    ## Recording Setting
+    # acquire and parse data
+    def get_data(self):
+        if self.COMPort:
+            data_raw = self.COMPort.readline()
+            now = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+            try:
+                data = float(data_raw.decode().strip())
+                #return now, data
+            except:
+                data = 0.0
+                #return datetime.now().strftime('%H:%M:%S.%f')[:-3]
+            print("{} -> {}".format(now, data))
+    
     ## Plot Setting
     # initial figure
     def waveForm(self):
@@ -128,20 +159,12 @@ if __name__ == '__main__':
         window = MainWindow()
         window.show()
 
-        timer = QtCore.QTimer()
-        timer.timeout.connect(window.count)
-        timer.start(50)
+        #timer = QtCore.QTimer()
+        #timer.timeout.connect(window.count)
+        #timer.start(50)
 
         sys.exit(app.exec_())
 '''
-
-# clear the screen
-
-
-
-
-
-## recording setting
 
 
 # ask the directory to save the data
@@ -151,17 +174,7 @@ def ask_directory():
     folder = askdirectory(parent=root, initialdir='d:')
     return folder
 
-# acquire and parse data
-def get_data(ser):
-    data_raw = ser.readline()
-    try:
-        data = float(data_raw.decode().strip())
-        now = datetime.now().strftime('%H:%M:%S.%f')[:-3]
-        print("{} -> {}".format(now, data))
-        return now, data
-    except:
-        return datetime.now().strftime('%H:%M:%S.%f')[:-3]
-    
+
 
 # set record information
 def set_rec_info():
