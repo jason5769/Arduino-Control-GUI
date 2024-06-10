@@ -39,6 +39,20 @@
         <height>411</height>
        </rect>
       </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="sceneRect">
+       <rectf>
+        <x>0.000000000000000</x>
+        <y>0.000000000000000</y>
+        <width>851.000000000000000</width>
+        <height>411.000000000000000</height>
+       </rectf>
+      </property>
      </widget>
      <widget class="QFrame" name="frame">
       <property name="geometry">
@@ -134,7 +148,7 @@
          <x>20</x>
          <y>290</y>
          <width>221</width>
-         <height>141</height>
+         <height>151</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
@@ -248,16 +262,6 @@
         </item>
        </layout>
       </widget>
-     </widget>
-     <widget class="QGraphicsView" name="graphicsView_2">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>851</width>
-        <height>441</height>
-       </rect>
-      </property>
      </widget>
      <widget class="QTextEdit" name="textEdit">
       <property name="geometry">
