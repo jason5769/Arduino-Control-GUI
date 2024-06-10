@@ -27,6 +27,7 @@ class Ui_MainWindow(object):
         self.graphicsView.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.graphicsView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.graphicsView.setSceneRect(QtCore.QRectF(0.0, 0.0, 851.0, 411.0))
+        self.graphicsView.setViewportUpdateMode(QtWidgets.QGraphicsView.MinimalViewportUpdate)
         self.graphicsView.setObjectName("graphicsView")
         self.frame = QtWidgets.QFrame(self.tab)
         self.frame.setGeometry(QtCore.QRect(860, 0, 351, 661))
