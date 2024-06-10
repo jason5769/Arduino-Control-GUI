@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-import sys, view
+import view
 
-import os
+import os, sys, time
 from os.path import join
 
 import serial
@@ -23,19 +23,31 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
         super().__init__()
         # ui variables
         self.setupUi(self)
-        
+        self.sceneSize = self.getViewSize(str(self.graphicsView.size()))
         self.canvas = FigureCanvas(self.waveForm())
         self.graphicscene = QtWidgets.QGraphicsScene()
-        #self.graphicscene.setSceneRect(0.0, 0.0, 851.0, 411.0)
+        self.graphicscene.setSceneRect(0.0, 0.0, self.sceneSize[0], self.sceneSize[1])
         self.graphicscene.addWidget(self.canvas)
         self.graphicsView.setScene(self.graphicscene)
-        
+        #print(self.getViewSize(str(self.graphicsView.size())))
+
         self.COMPortList = {}
         self.comboBox.addItems(self.listPort())
         
         self.t = 0  # time step for sin wave
+        
+        #self.Timer(self.test_count)
+        #self.run()
     
+    ## Basic Operation
+    # get graphicView's size (width, height)
+    def getViewSize(self, sizeStr):
+        sizeRange = sizeStr.split("(")[1][0:-1]
+        sizeRange = list(map(int, sizeRange.split(",")))
+        return sizeRange
+
     ## Serial Port Setting
+    # clear texts in console
     def clearConsole(self):
         # for windows
         if os.name == 'nt':
@@ -64,14 +76,10 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
     ## Plot Setting
     # initial figure
     def waveForm(self):
-        sceneWidth = self.graphicsView.viewport().width()/100
-        sceneHeight = self.graphicsView.viewport().height()/100
-        #print(sceneWidth, sceneHeight)
-        fig = plt.figure(figsize=(sceneWidth, sceneHeight), dpi=100)
+        fig = plt.figure(figsize=(self.sceneSize[0]/100, self.sceneSize[1]/100), dpi=100)
         ax = plt.axes(xlim=(0, 30), ylim=(-2, 4))
         ax.set_xlabel('timepoint (sec)')
         ax.set_ylabel('airflow rate (mL/min)')
-
         line, = ax.plot([], [])
         x = np.linspace(0, 30, 300)
         y = np.zeros(300)
@@ -87,16 +95,13 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
 
     # function test - sine wave
     def sinWave(self, i=0):
-        fig = plt.figure(figsize=(8.51,4.11), dpi=100)
+        fig = plt.figure(figsize=(self.sceneSize[0]/100, self.sceneSize[1]/100), dpi=100)
         ax = plt.axes(xlim=(0, 2), ylim=(-2, 2), xlabel='timepoint', ylabel='airflow rate (mL/min)')
-
-
         line, = ax.plot([], [])
         line.set_data([], [])
         x = np.linspace(0, 2, 100)
         y = np.sin(5 * np.pi * (x - 0.01*i))
         line.set_data(x, y)
-        
         plt.close()
         return fig
 
@@ -106,6 +111,17 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
         self.canvas = FigureCanvas(self.sinWave(self.t))
         self.graphicscene.clear()
         self.graphicscene.addWidget(self.canvas)
+
+    ## Thread setting
+    def Timer(self, func, t=50):
+        timer = QtCore.QTimer()
+        timer.timeout.connect(func)
+        timer.start(t)
+
+    def run(self):
+        self.thread_figurecanvas = QtCore.QThread()
+        self.thread_figurecanvas.run = self.test_count
+        self.thread_figurecanvas.start()
 
 if __name__ == '__main__':
         app = QtWidgets.QApplication(sys.argv)
