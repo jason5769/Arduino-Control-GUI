@@ -9,8 +9,8 @@ import serial.tools.list_ports
 
 from os.path import join
 from datetime import datetime, timedelta
-import tkinter as tk
-from tkinter.filedialog import askdirectory
+#import tkinter as tk
+#from tkinter.filedialog import askdirectory
 import serial
 import numpy as np
 import pandas as pd
@@ -19,30 +19,61 @@ import matplotlib
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 
 class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.canvas = FigureCanvas(self.sinWave)
-        self.graphicscene = QtWidgets.QGraphicScene()
-        self.graphicscene = setSceneRect(QtCore.QRect(860, 0, 261, 661))
+        self.canvas = FigureCanvas(self.waveForm())
+        self.graphicscene = QtWidgets.QGraphicsScene()
+        #self.graphicscene.setSceneRect(0.0, 0.0, 851.0, 411.0)
         self.graphicscene.addWidget(self.canvas)
-        self.t = 0
+        self.graphicsView.setScene(self.graphicscene)
 
-    def sinWave(self, i=0):
-        fig = plt.figure(figsize=(3,2), dpi=100)
-        ax = plt.axes(xlim=(0, 2), ylim=(-2, 2))
+        #parameters for function test
+        self.t = 0  # time step for sin wave
+    
+    ## Plot Setting
+    # initial figure
+    def waveForm(self):
+        sceneWidth = self.graphicsView.viewport().width()/100
+        sceneHeight = self.graphicsView.viewport().height()/100
+        #print(sceneWidth, sceneHeight)
+        fig = plt.figure(figsize=(sceneWidth, sceneHeight), dpi=100)
+        ax = plt.axes(xlim=(0, 30), ylim=(-2, 4))
+        ax.set_xlabel('timepoint (sec)')
+        ax.set_ylabel('airflow rate (mL/min)')
+
         line, = ax.plot([], [])
-        line.set_data([], [])
-        x = np.linspace(0, 2, 100)
-        y = np.sin(5 * np.pi * (x - 0.01*i))
+        x = np.linspace(0, 30, 300)
+        y = np.zeros(300)
         line.set_data(x, y)
         plt.close()
         return fig
 
     def count(self):
+        #self.t = self.t + 5
+        self.canvas = FigureCanvas(self.waveForm())
+        self.graphicscene.clear()
+        self.graphicscene.addWidget(self.canvas)
+
+    # function test - sine wave
+    def sinWave(self, i=0):
+        fig = plt.figure(figsize=(8.51,4.11), dpi=100)
+        ax = plt.axes(xlim=(0, 2), ylim=(-2, 2), xlabel='timepoint', ylabel='airflow rate (mL/min)')
+
+
+        line, = ax.plot([], [])
+        line.set_data([], [])
+        x = np.linspace(0, 2, 100)
+        y = np.sin(5 * np.pi * (x - 0.01*i))
+        line.set_data(x, y)
+        
+        plt.close()
+        return fig
+
+    # function test - counter
+    def test_count(self):
         self.t = self.t + 5
         self.canvas = FigureCanvas(self.sinWave(self.t))
         self.graphicscene.clear()
@@ -58,7 +89,7 @@ if __name__ == '__main__':
         timer.start(50)
 
         sys.exit(app.exec_())
-
+'''
 ## serial port setting
 # clear the screen
 def clear():
@@ -181,9 +212,7 @@ def reset():
     return False, [], []
 
 
-## plotting setting
-# make a Figure object
-'''
+
 def makeFigure():
     fig = Figure(figsize=(6, 2.5), dpi=100, tight_layout=True)
     ax = fig.add_subplot(111)
