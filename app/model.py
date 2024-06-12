@@ -104,14 +104,18 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
     ## Data Streaming Setting
     # start data streaming
     def startButtonClick(self):
+        if self.dataThread.isRunning():
+            pass
         if self.COMDevice:
+            self.COMDevice.reset_output_buffer()
             self.dataThread.start()
         else:
             print("No available COM port device!")
 
     # stop data streaming
     def stopButtonClick(self):
-        self.dataThread.terminate()
+        if self.dataThread.isRunning():
+            self.dataThread.terminate()
 
     # clear data streaming record
     def clearButtonClick(self):
