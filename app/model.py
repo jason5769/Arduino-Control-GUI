@@ -21,7 +21,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
     def __init__(self):
         super().__init__()
-        # ui variables
+        # UI Variables
         self.setupUi(self)
         self.sceneSize = self.getViewSize(str(self.graphicsView.size()))
         self.canvas = FigureCanvas(self.waveForm())
@@ -34,13 +34,26 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
         self.timer.start(50)
         #print(self.getViewSize(str(self.graphicsView.size())))
 
+        # Device Connect Variables
         self.COMPortList = {}
         self.comboBox.addItems(self.listPort())
-        self.COMPort = 0
+        self.COMDevice = 0
+        self.com_port = self.comboBox.currentText()
+        self.baud_rate = int(self.baudrateTextBrowser.toPlainText())
+        self.time_out = int(self.timeoutTextBrowser.toPlainText())
         self.connectButton.clicked.connect(self.connectButtonClick)
-        self.timer2 = QtCore.QTimer()
-        self.timer2.timeout.connect(self.get_data)
+        self.dataThread = QtCore.QThread()
+        self.dataThread.run = self.get_data
 
+        # Recording Variables
+        
+        # Event Trigger Variables
+        self.startButton.clicked.connect(self.startButtonClick)
+        self.stopButton.clicked.connect(self.stopButtonClick)
+        self.clearButton.clicked.connect(self.clearButtonClick)
+
+        
+        # Function Test Variables
         self.t = 0  # time step for sin wave
         
         #self.Timer(self.test_count)
@@ -53,16 +66,7 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
         sizeRange = list(map(int, sizeRange.split(",")))
         return sizeRange
 
-    ## Serial Port Setting
-    # clear texts in console
-    def clearConsole(self):
-        # for windows
-        if os.name == 'nt':
-            _ = os.system('cls')
-        # for mac and linux
-        else:
-            _ = os.system('clear')
-
+    ## Device Connect Setting
     # return list of available COM port
     def listPort(self):
         ports = map(str, serial.tools.list_ports.comports())
@@ -76,33 +80,71 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
 
     # connet port
     def connectPort(self, com_port, baud_rate, time_out):
-        port_name = com_port.split(" ")[0]
-        ser = serial.Serial(port_name, baud_rate, timeout=time_out)   # set the serial connection
-        return ser
-
+        print("================================")
+        print("Start connecting...")
+        try:
+            self.COMDevice = serial.Serial(com_port, baud_rate, timeout=time_out)   # set the serial connection
+            
+        except:
+            print("No available COM port device!")
+            self.COMDevice = 0
+        else:
+            print("Connection successful!")
+            print("COM Port name: {}".format(com_port))
+            #print(self.COMDevice)
+            print("================================")
+        
     # action of Connect Button
     def connectButtonClick(self):
-        try:
-            self.COMPort = self.connectPort(self.comboBox.currentText(), int(self.baudrateTextBrowser.toPlainText()), int(self.timeoutTextBrowser.toPlainText()))
-            print(self.COMPort)
-        except:
-            self.COMPort = 0
+        self.com_port = self.comboBox.currentText()
+        self.baud_rate = int(self.baudrateTextBrowser.toPlainText())
+        self.time_out = int(self.timeoutTextBrowser.toPlainText())
+        self.connectPort(self.com_port, self.baud_rate, self.time_out)  
+
+    ## Data Streaming Setting
+    # start data streaming
+    def startButtonClick(self):
+        if self.COMDevice:
+            self.dataThread.start()
+        else:
             print("No available COM port device!")
-        self.timer2.start(1000 / int(self.samplingrateTextBrowser.toPlainText()))
+
+    # stop data streaming
+    def stopButtonClick(self):
+        self.dataThread.terminate()
+
+    # clear data streaming record
+    def clearButtonClick(self):
+        # clear figure in plotting area
+        def clearPlot(self):
+            pass  
+
+        # clear texts in console
+        # for windows
+        if os.name == 'nt':
+            _ = os.system('cls')
+        # for mac and linux
+        else:
+            _ = os.system('clear')
 
     ## Recording Setting
     # acquire and parse data
     def get_data(self):
-        if self.COMPort:
-            data_raw = self.COMPort.readline()
+        while True:
+            data_raw = self.COMDevice.readline()
             now = datetime.now().strftime('%H:%M:%S.%f')[:-3]
             try:
                 data = float(data_raw.decode().strip())
                 #return now, data
             except:
-                data = 0.0
+                data = ""
                 #return datetime.now().strftime('%H:%M:%S.%f')[:-3]
+            
+            # update figure
+
+            # show on console
             print("{} -> {}".format(now, data))
+            time.sleep(int(1 / int(self.samplingrateTextBrowser.toPlainText())))
     
     ## Plot Setting
     # initial figure
