@@ -18,7 +18,20 @@ matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
+class ComboBox(QtWidgets.QComboBox):
+    popupAboutToBeShown = QtCore.pyqtSignal()
+
+    def showPopup(self):
+        self.popupAboutToBeShown.emit()
+        super(ComboBox, self).showPopup()
+
+    def hidePopup(self):
+        self.popupAboutToBeShown.connect(self.listPort)
+        super(ComboBox, self).hidePopup()
+
 class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
+    showList = QtCore.pyqtSignal()
+
     def __init__(self):
         super().__init__()
         # UI Variables
@@ -36,7 +49,10 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
 
         # Device Connect Variables
         self.COMPortList = {}
-        self.comboBox.addItems(self.listPort())
+        self.listPort()
+        #self.comboBox.activated.connect(self.listPort)
+        #self.comboBox = ComboBox()
+        #self.comboBox.popupAboutToBeShown.connect(self.listPort)
         self.COMDevice = 0
         self.com_port = self.comboBox.currentText()
         self.baud_rate = int(self.baudrateTextBrowser.toPlainText())
@@ -46,6 +62,8 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
         self.dataThread.run = self.get_data
 
         # Recording Variables
+        self.sensorData = []
+        self.allData = []
         
         # Event Trigger Variables
         self.startButton.clicked.connect(self.startButtonClick)
@@ -69,14 +87,16 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
     ## Device Connect Setting
     # return list of available COM port
     def listPort(self):
+        self.comboBox.clear()
+        self.COMPortList = {}
         ports = map(str, serial.tools.list_ports.comports())
         if ports:
             for p in ports:
                 #print(p)
                 self.COMPortList[p.split(' - ')[0]] = p
-            return self.COMPortList.keys()
+            self.comboBox.addItems(self.COMPortList.keys())
         else:
-            return [""]
+            self.comboBox.addItems([""])
 
     # connet port
     def connectPort(self, com_port, baud_rate, time_out):
@@ -88,11 +108,13 @@ class MainWindow(QtWidgets.QMainWindow, view.Ui_MainWindow):
         except:
             print("No available COM port device!")
             self.COMDevice = 0
+            self.listPort()
         else:
             print("Connection successful!")
             print("COM Port name: {}".format(com_port))
             #print(self.COMDevice)
             print("================================")
+            
         
     # action of Connect Button
     def connectButtonClick(self):
